@@ -1,0 +1,78 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: k8t-sample-deployment
+  name: k8t-sample-deployment
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        name: k8t-sample-deployment
+    spec:
+      containers:
+      - name: k8t-sample
+        image: gcr.io/YOUR_PROJECT/k8t-sample:1.0
+        ports:
+         - name: liveness-port
+           containerPort: 3000
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: liveness-port
+          initialDelaySeconds: 15
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: liveness-port
+          initialDelaySeconds: 20
+          timeoutSeconds: 5
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: k8t-sample-service
+  name: k8t-sample-service
+spec:
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+  selector:
+    name: k8t-sample-deployment
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: routes-ing
+  annotations:  
+    kubernetes.io/tls-acme: "true"
+    kubernetes.io/ingress.class: "gce"
+spec:
+  backend:
+    serviceName: k8t-sample-service
+    servicePort: 80
+  
+  # tls:
+  # - hosts:
+  #   - api.dev.YOUR_PROJECT.no
+  #   - front.dev.YOUR_PROJECT.no
+  #   secretName: api-dev-secret
+  # rules:
+  # - host: api.dev.YOUR_PROJECT.no
+  #   http:
+  #     paths:
+  #     - path: /lighthouse/*
+  #       backend:
+  #         serviceName: lighthouse-service-public
+  #         servicePort: 80

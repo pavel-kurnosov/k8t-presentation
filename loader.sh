@@ -1,0 +1,1 @@
+while true; do wget -q -O- http://INGRESS_IP/; done

@@ -1,0 +1,11 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: k8t-sample-autoscaler
+spec:
+  scaleTargetRef:
+    kind: Deploymex nt
+    name: k8t-sample-deployment
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
